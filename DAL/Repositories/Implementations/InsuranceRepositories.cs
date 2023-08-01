@@ -15,7 +15,8 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
         }
         public async Task<TemplateResponseModels> GetTemplateDB()
         {
-            var body = _dBContext.templates.Where(i => i.ID == 1);
+            int id = 1;
+            var body = _dBContext.templates.Where(i => i.ID == id);
 
             var res = await body.Select(i => new TemplateResponseModels
             {

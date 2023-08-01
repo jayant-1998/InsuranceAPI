@@ -16,7 +16,7 @@ namespace InsuranceAPI.Controllers
             _service = service;
         }
 
-        [HttpGet]
+        [HttpGet("{id}")]
         public async Task<ActionResult> FinalApi(int id)
         {
             try
@@ -42,7 +42,9 @@ namespace InsuranceAPI.Controllers
                 };
                 return Ok(response);
             }
-        } 
+        }
+
+        
 
 
         

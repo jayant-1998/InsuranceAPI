@@ -9,23 +9,18 @@ namespace InsuranceAPI.Services.Implementations
     public class InsuranceServices : IInsuranceServices
     {
         private readonly IInsuranceRepositories _repositories;
-        private async Task<TemplateResponseModels> GetTemplate()
-        {
-            return await _repositories.GetTemplateDB();
-        }
 
-        private async Task<UserResponseModels> GetUser(int id)
+        public InsuranceServices(IServiceProvider serviceProvider)
         {
-            return await _repositories.GetUserDB(id);
+            _repositories = serviceProvider.GetRequiredService<IInsuranceRepositories>();
         }
-
-        private string PopulateHtmlTemplateWithUserData(string htmlTemplate, UserResponseModels user)
+        public string PopulateHtmlTemplateWithUserData(string htmlTemplate, UserResponseModels user)
         {
-            PropertyInfo[] properties = typeof(Users).GetProperties();
+            PropertyInfo[] properties = typeof(UserResponseModels).GetProperties();
 
             foreach (var property in properties)
             {
-                string placeholder = $"{{{{ {property.Name} }}}}";
+                string placeholder = $"{{{{{property.Name}}}}}";
                 object value = property.GetValue(user);
                 string valueString = value != null ? value.ToString() : string.Empty;
 
@@ -34,15 +29,22 @@ namespace InsuranceAPI.Services.Implementations
 
             return htmlTemplate; 
         }
-        public string FinalApi(int id)
+        public async Task<string> FinalApi(int id)
         {
-            var template = GetTemplate();
-            var userbody = GetUser(id);
+            var template = await _repositories.GetTemplateDB();
+            var userbody = await _repositories.GetUserDB(id).ConfigureAwait(false);
 
-            var html = PopulateHtmlTemplateWithUserData(template.HTML, userbody);
+            var html = PopulateHtmlTemplateWithUserData(template.HTML,userbody);
 
             return html;
 
+        }
+
+        public async Task<TemplateResponseModels> GetTemplate()
+        {
+            var temp = await _repositories.GetTemplateDB();
+
+            return temp;
         }
     }
 }
