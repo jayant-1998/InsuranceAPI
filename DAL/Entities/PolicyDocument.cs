@@ -3,17 +3,19 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace InsuranceAPI.DAL.Entities
 {
-    [Table("PolicyDocuments", Schema="dbo")]
-    public class PolicyDocuments
+    [Table("PolicyDocument", Schema="dbo")]
+    public class PolicyDocument
     {
         [Key]
         public int ID { get; set; }
         [Required]
         public string ObjectCode { get; set; }
         [Required]
+        public string ReferenceType { get; set; }
+        [Required]
         public string ReferenceNumber { get; set; }
         [Required]
-        public string Context { get; set; }
+        public byte[] Content { get; set; }
         [Required]
         public string FileName { get; set; }
         [Required]   

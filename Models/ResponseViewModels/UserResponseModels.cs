@@ -3,7 +3,7 @@ namespace InsuranceAPI.Models.ResponseViewModels
 {
     public class UserResponseModels
     {
-        //public int ID { get; set; }
+        public int ID { get; set; }
         public string Name { get; set; }
         public string PolicyNumber { get; set; }
         public int Age { get; set; }

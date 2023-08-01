@@ -10,14 +10,14 @@ namespace InsuranceAPI.DAL.DBContexts
         {}
 
         public DbSet<Users> users { get; set; }
-        //public DbSet<PolicyDocuments> documents { get; set; }
+        public DbSet<PolicyDocument> documents { get; set; }
         public DbSet<HtmlTemplate> templates { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Users>();
             modelBuilder.Entity<HtmlTemplate>();
-            modelBuilder.Entity<PolicyDocuments>();
+            modelBuilder.Entity<PolicyDocument>();
         }
     }
 }
