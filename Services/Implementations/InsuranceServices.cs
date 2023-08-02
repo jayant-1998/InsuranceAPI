@@ -66,7 +66,7 @@ namespace InsuranceAPI.Services.Implementations
 
             var pdf = await HtmlToPdf(html);
 
-            var  temp = await _repositories.CreateObjectOfDocument(userbody, pdf);
+            var  temp = await _repositories.InsertIntoDocument(userbody, pdf);
             if (temp == "true") 
             {
                 return temp;

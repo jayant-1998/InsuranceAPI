@@ -51,10 +51,23 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
 
             return res;
         }
-        public  async Task<string> CreateObjectOfDocument(UserResponseModels user, byte[] pdf)
+        public async Task<string> InsertIntoDocument (UserResponseModels user, byte[] pdf)
         {
             try 
             {
+                var body =  await _dBContext.documents
+                           .Where(todo => todo.ObjectCode == $"{user.PolicyNumber}-{user.ProductCode}" && todo.IsDeleted == false)
+                           .SingleOrDefaultAsync();
+
+                if (body != null)
+                {
+                    body.IsDeleted = true;
+                    await _dBContext.SaveChangesAsync();
+                }
+
+
+
+
                 PolicyDocument request = new PolicyDocument
                 {
                     ObjectCode = $"{user.PolicyNumber}-{user.ProductCode}",
