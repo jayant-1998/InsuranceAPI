@@ -8,6 +8,7 @@ namespace InsuranceAPI.DAL.Repositories.Interfaces
     {
         public Task<TemplateResponseModels> GetTemplateDB();
         public Task<UserResponseModels> GetUserDB(int id);
-        public Task<string> InsertIntoDocument(UserResponseModels user, byte[] pdf);
+        public Task<string> InsertIntoDocumentDB(UserResponseModels user, byte[] pdf);
+        public Task<PolicyDocument> GetDocummentDb(int id, UserResponseModels user);
     }
 }

@@ -11,6 +11,6 @@ namespace InsuranceAPI.Models.ResponseViewModels
         public string Occupation { get; set; }
         public DateTime PolicyExpiryDate { get; set; }
         public string ProductCode { get; set; }
-        //public string EmailAddress { get; set; }
+        public string EmailAddress { get; set; }
     }
 }

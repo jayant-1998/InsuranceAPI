@@ -17,7 +17,7 @@ namespace InsuranceAPI.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult> FinalApi(int id)
+        public async Task<ActionResult> GenerateDocument(int id)
         {
             try
             {
@@ -44,9 +44,37 @@ namespace InsuranceAPI.Controllers
             }
         }
 
-        
+        [HttpGet("{id}/sendemail")]
+        public async Task<ActionResult> SendEmail(int id)
+        {
+            try
+            {
+                var check = await _service.SendEmail(id);
+                var response = new ApiResponseModel
+                {
+                    Timestamp = DateTime.Now,
+                    Code = 200,
+                    Message = "success",
+                    Body = check
+                };
+                return Ok(response);
+            }
+            catch(Exception ex)
+            {
+                var response = new ApiResponseModel
+                {
+                    Timestamp = DateTime.Now,
+                    Code = 500,
+                    Message = ex.Message,
+                    Body = null
+                };
+                return Ok(response);
+            }
+        }
 
 
-        
+
+
+
     }
 }
