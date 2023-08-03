@@ -55,41 +55,6 @@ namespace InsuranceAPI.Services.Implementations
             return pdfContent;
         }
 
-        //public async Task<bool> SendEmail(int id)
-        //{
-        //    var user = await _repositories.GetUserDB(id).ConfigureAwait(false);
-        //    var doc = await _repositories.GetDocummentDb(id, user).ConfigureAwait(false);
-
-        //    var email = new MailMessage();
-        //    email.From = new MailAddress("jayant.grover@remotestate.com", "jayant");
-        //    email.To.Add(new MailAddress(user.EmailAddress, user.Name));
-        //    email.Subject = "Policy";
-        //    email.Body = "Dear user,\n\nThis is the user policy.\n\nBest regards,\nxyz";
-
-        //    using (MemoryStream stream = new MemoryStream(doc.Content))
-        //    {
-        //        email.Attachments.Add(new Attachment(stream, "policy.pdf", "application/pdf"));
-        //    }
-
-        //    using (SmtpClient smtpClient = new SmtpClient("smtp.gmail.com", 587))
-        //    {
-        //        smtpClient.UseDefaultCredentials = false;
-        //        smtpClient.Credentials = new NetworkCredential("jayantgrover7417@gmail.com", "jayant@@@@");
-        //        smtpClient.EnableSsl = true;
-
-        //        try
-        //        {
-        //            await smtpClient.SendAsync(email, null);
-        //            return true;
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            await Console.Out.WriteLineAsync(ex.Message);
-        //            return false;
-        //        }
-        //    }
-        //}
-
         public async Task<bool> SendEmail(int id)
         {
             var user = await _repositories.GetUserDB(id).ConfigureAwait(false);
@@ -97,8 +62,8 @@ namespace InsuranceAPI.Services.Implementations
 
 
             var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("jayant", "jayant.grover@remotestate.com"));
-            message.To.Add(new MailboxAddress(user.Name, user.EmailAddress));
+            message.From.Add(new MailboxAddress("jayant", "jg986511@gmail.com"));
+            message.To.Add(new MailboxAddress(user.Name, "jg986511@gmail.com"));
 
             message.Subject = "Policy";
 
@@ -115,10 +80,10 @@ namespace InsuranceAPI.Services.Implementations
 
             using (var smtpClient = new SmtpClient())
             {
-                smtpClient.Connect("smtp.remotestate.com", 587, false);
+                smtpClient.Connect("smtp.gmail.com", 587, false);
 
-                // If your email server requires authentication, you can use the following line
-                smtpClient.Authenticate("jayant.grover@remotestate.com", "grover@@@@");
+                
+                smtpClient.Authenticate("jg986511@gmail.com", "gmwmkuxhvgrfjamv");
 
                 try
                 {
