@@ -59,44 +59,47 @@ namespace InsuranceAPI.Services.Implementations
         {
             var user = await _repositories.GetUserDB(id).ConfigureAwait(false);
             var doc = await _repositories.GetDocummentDb(id, user).ConfigureAwait(false);
-
-
-            var message = new MimeMessage();
-            message.From.Add(new MailboxAddress("jayant", "jayant.grover@remotestate.com"));
-            message.To.Add(new MailboxAddress(user.Name, user.EmailAddress));
-
-            message.Subject = "Policy";
-
-            string textBody = "Dear user,\n\nThis is the user policy.\n\nBest regards,\nxyz";
-
-            BodyBuilder bodyBuilder = new BodyBuilder()
+            if (doc != null)
             {
-                TextBody = textBody
-            };
 
-            bodyBuilder.Attachments.Add("Policy.pdf", doc.Content, new ContentType("application", "pdf"));
+                var message = new MimeMessage();
+                message.From.Add(new MailboxAddress("jayant", "jg986511@gmail.com"));
+                message.To.Add(new MailboxAddress(user.Name, user.EmailAddress));
 
-            message.Body = bodyBuilder.ToMessageBody();
+                message.Subject = "Policy";
 
-            using (var smtpClient = new SmtpClient())
-            {
-                smtpClient.Connect("smtp.remotestate.com", 587, false);
+                string textBody = "Dear user,\n\nThis is the user policy.\n\nBest regards,\nxyz";
 
-                
-                smtpClient.Authenticate("jayant.grover@remotestate.com", "grover@@@@");
-
-                try
+                BodyBuilder bodyBuilder = new BodyBuilder()
                 {
-                    await smtpClient.SendAsync(message);
-                    smtpClient.Disconnect(true);
-                    return true;
-                }
-                catch (Exception ex)
+                    TextBody = textBody
+                };
+
+                bodyBuilder.Attachments.Add("Policy.pdf", doc.Content, new ContentType("application", "pdf"));
+
+                message.Body = bodyBuilder.ToMessageBody();
+
+                using (var smtpClient = new SmtpClient())
                 {
-                    await Console.Out.WriteLineAsync(ex.Message);
-                    return false;
+                    smtpClient.Connect("smtp.gmail.com", 587, false);
+
+
+                    smtpClient.Authenticate("jg986511@gmail.com", "hwzgnejrbmlwoupa");
+
+                    try
+                    {
+                        await smtpClient.SendAsync(message);
+                        smtpClient.Disconnect(true);
+                        return true;
+                    }
+                    catch (Exception ex)
+                    {
+                        await Console.Out.WriteLineAsync(ex.Message);
+                        return false;
+                    }
                 }
             }
+            return false;
         }
         public async Task<string> FinalApi(int id)
         {

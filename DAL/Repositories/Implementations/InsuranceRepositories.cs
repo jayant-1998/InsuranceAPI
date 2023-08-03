@@ -22,6 +22,10 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
                         && doc.ObjectCode == $"{user.PolicyNumber}-{user.ProductCode}" 
                         && doc.IsDeleted == false)
                         .SingleOrDefaultAsync();
+            if (body == null)
+            {
+                return null;
+            }
             var res = new PolicyDocument()
             {
                 ID = body.ID,
