@@ -22,7 +22,7 @@ namespace InsuranceAPI.Controllers
         {
             try
             {
-                //await _service.SendEmail();
+                await _service.SendEmail();
                 var result = await _service.FinalApi(id);
                 var response = new ApiResponseModel
                 {
