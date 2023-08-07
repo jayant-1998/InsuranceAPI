@@ -12,12 +12,14 @@ namespace InsuranceAPI.DAL.DBContexts
         public DbSet<Users> users { get; set; }
         public DbSet<PolicyDocument> documents { get; set; }
         public DbSet<HtmlTemplate> templates { get; set; }
+        public DbSet<Email> email { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Users>();
             modelBuilder.Entity<HtmlTemplate>();
             modelBuilder.Entity<PolicyDocument>();
+            modelBuilder.Entity<Email>();
         }
     }
 }

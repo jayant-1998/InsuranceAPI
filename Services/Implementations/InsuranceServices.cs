@@ -6,6 +6,9 @@ using PuppeteerSharp;
 using PuppeteerSharp.Media;
 using MailKit.Net.Smtp;
 using System.Reflection;
+using System.Net.Mail;
+using MailKit.Security;
+using System.ComponentModel.DataAnnotations;
 
 namespace InsuranceAPI.Services.Implementations
 {
@@ -55,52 +58,66 @@ namespace InsuranceAPI.Services.Implementations
             return pdfContent;
         }
 
-        public async Task<bool> SendEmail(int id)
+        public async Task<bool> SendEmail()
         {
-            var user = await _repositories.GetUserDB(id).ConfigureAwait(false);
-            var doc = await _repositories.GetDocummentDb(id, user).ConfigureAwait(false);
-            if (doc != null)
+            var emails = await _repositories.GetEmailDb().ConfigureAwait(false);
+            if (emails.Count() >= 1)
             {
-
-                var message = new MimeMessage();
-                message.From.Add(new MailboxAddress("jayant", "jg986511@gmail.com"));
-                message.To.Add(new MailboxAddress(user.Name, user.EmailAddress));
-
-                message.Subject = "Policy";
-
-                string textBody = "Dear user,\n\nThis is the user policy.\n\nBest regards,\nxyz";
-
-                BodyBuilder bodyBuilder = new BodyBuilder()
+                foreach (var Email in emails)
                 {
-                    TextBody = textBody
-                };
+                    var message = new MimeMessage();
+                    message.From.Add(new MailboxAddress("jayant", "jg986511@gmail.com"));
+                    message.To.Add(new MailboxAddress(Email.name, MailboxAddress.Parse(Email.email).ToString()));
+                    message.Subject = Email.subject;
 
-                bodyBuilder.Attachments.Add("Policy.pdf", doc.Content, new ContentType("application", "pdf"));
+                    string textBody = Email.body;
 
-                message.Body = bodyBuilder.ToMessageBody();
-
-                using (var smtpClient = new SmtpClient())
-                {
-                    smtpClient.Connect("smtp.gmail.com", 587, false);
-
-
-                    smtpClient.Authenticate("jg986511@gmail.com", "hwzgnejrbmlwoupa");
-
-                    try
+                    BodyBuilder bodyBuilder = new BodyBuilder
                     {
-                        await smtpClient.SendAsync(message);
-                        smtpClient.Disconnect(true);
-                        return true;
-                    }
-                    catch (Exception ex)
+                        TextBody = textBody
+                    };
+                    bodyBuilder.Attachments.Add("Policy.pdf", Email.attachment, new ContentType("application", "pdf"));
+
+                    message.Body = bodyBuilder.ToMessageBody();
+
+                    using (var smtpClient = new MailKit.Net.Smtp.SmtpClient())
                     {
-                        await Console.Out.WriteLineAsync(ex.Message);
-                        return false;
+                        smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
+                        await smtpClient.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+                        await smtpClient.AuthenticateAsync("jg986511@gmail.com", "hwzgnejrbmlwoupa");
+                        try
+                        {
+                            var str = await smtpClient.SendAsync(message);
+                            await Console.Out.WriteLineAsync(str);
+                            await smtpClient.DisconnectAsync(true);
+                            var check = await _repositories.UpdateEmailDB(Email, true);
+                            if (check != true)
+                            {
+                                await Console.Out.WriteLineAsync(Email.ID + " was not updated in the database");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            var check = await _repositories.UpdateEmailDB(Email, false);
+                            if (check != true)
+                            {
+                                await Console.Out.WriteLineAsync(ex.Message);
+                                await Console.Out.WriteLineAsync(Email.ID + " was not updated in the database");
+                            }
+                            await Console.Out.WriteLineAsync(ex.Message);
+                            await Console.Out.WriteLineAsync(Email.ID + " was updated in the database");
+                            throw; 
+                        }
                     }
                 }
+                return true;
             }
-            return false;
+
+            await Console.Out.WriteLineAsync("No Emails found");
+            return true;
         }
+
+
         public async Task<string> FinalApi(int id)
         {
             var template = await _repositories.GetTemplateDB();
@@ -110,12 +127,22 @@ namespace InsuranceAPI.Services.Implementations
 
             var pdf = await HtmlToPdf(html);
 
-            var  temp = await _repositories.InsertIntoDocumentDB(userbody, pdf);
-            if (temp == "true") 
+            var  doc = await _repositories.InsertIntoDocumentDB(userbody, pdf);
+            if (doc == "true") 
             {
-                return temp;
+                var exits = await _repositories.IsUserExitsDB(userbody);
+                if (exits == false)
+                {
+                    var email = await _repositories.InsertIntoEmailDB(userbody, pdf);
+                    if (email == "true")
+                    {
+                        return email;
+                    }
+                    return email;
+                }
+                return "true but already exits in the table email";
             }
-            return temp;
+            return doc;
 
         }
 

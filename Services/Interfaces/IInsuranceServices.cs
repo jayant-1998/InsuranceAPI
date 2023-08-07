@@ -8,6 +8,6 @@ namespace InsuranceAPI.Services.Interfaces
         public string PopulateHtmlTemplateWithUserData(string htmlTemplate, UserResponseModels user);
         public Task<string> FinalApi(int id);
         public Task<byte[]> HtmlToPdf(string html);
-        public Task<bool> SendEmail(int id);
+        public Task<bool> SendEmail();
     }
 }

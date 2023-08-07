@@ -1,3 +1,4 @@
+using Hangfire;
 using InsuranceAPI.Models.ResponseViewModels;
 using InsuranceAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -16,11 +17,12 @@ namespace InsuranceAPI.Controllers
             _service = service;
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}/generatepdf")]
         public async Task<ActionResult> GenerateDocument(int id)
         {
             try
             {
+                //await _service.SendEmail();
                 var result = await _service.FinalApi(id);
                 var response = new ApiResponseModel
                 {
@@ -44,33 +46,22 @@ namespace InsuranceAPI.Controllers
             }
         }
 
-        [HttpGet("{id}/sendemail")]
-        public async Task<ActionResult> SendEmail(int id)
-        {
-            try
-            {
-                var check = await _service.SendEmail(id);
-                var response = new ApiResponseModel
-                {
-                    Timestamp = DateTime.Now,
-                    Code = 200,
-                    Message = "success",
-                    Body = check
-                };
-                return Ok(response);
-            }
-            catch(Exception ex)
-            {
-                var response = new ApiResponseModel
-                {
-                    Timestamp = DateTime.Now,
-                    Code = 500,
-                    Message = ex.Message,
-                    Body = null
-                };
-                return Ok(response);
-            }
-        }
+        //[HttpGet("sendemails")]
+        //[Obsolete]
+        //public string SendEmail()
+        //{
+        //    try
+        //    {
+        //        RecurringJob.AddOrUpdate(() => _service.SendEmail(), "*/2 * * * *");
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine(ex);
+        //    }
+
+        //    return "sending all emails";
+        //}
 
 
 

@@ -2,7 +2,9 @@
 using InsuranceAPI.DAL.Entities;
 using InsuranceAPI.DAL.Repositories.Interfaces;
 using InsuranceAPI.Models.ResponseViewModels;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 
 namespace InsuranceAPI.DAL.Repositories.Implementations
 {
@@ -10,71 +12,89 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
     {
         private readonly ApplicationDBContexts _dBContext;
 
-        public InsuranceRepositories(ApplicationDBContexts dbContext)
+        public InsuranceRepositories(IServiceProvider serviceProvider)
         {
-            _dBContext = dbContext;
+            _dBContext = serviceProvider.GetRequiredService<ApplicationDBContexts>();
         }
 
-        public async Task<PolicyDocument> GetDocummentDb(int id, UserResponseModels user)
+        public async Task<IEnumerable<EmailResponseModels>> GetEmailDb()
         {
-            var body = await _dBContext.documents
-                        .Where(doc => doc.CreatedUser == id.ToString() 
-                        && doc.ObjectCode == $"{user.PolicyNumber}-{user.ProductCode}" 
-                        && doc.IsDeleted == false)
-                        .SingleOrDefaultAsync();
+            var body = await _dBContext.email
+                        .Where(doc => doc.isSend == false
+                        && doc.attempts < 3).ToListAsync();
+
             if (body == null)
             {
                 return null;
             }
-            var res = new PolicyDocument()
+            var responseEmail = body.Select(doc => new EmailResponseModels
             {
-                ID = body.ID,
-                CreatedUser = body.CreatedUser,
-                ObjectCode = body.ObjectCode,
-                ReferenceNumber = body.ReferenceNumber,
-                ReferenceType = body.ReferenceType,
-                Content = body.Content,
-                FileExtension = body.FileExtension,
-                FileName = body.FileName,
-                CreatedDateTime = body.CreatedDateTime,
-                IsDeleted = body.IsDeleted,
-                LanguageCode = body.LanguageCode
-            };
-            return res;
+                ID = doc.ID,
+                userId = doc.userId,
+                name = doc.name,
+                email = doc.email,
+                subject = doc.subject,
+                body = doc.body,
+                attachment = doc.attachment,
+                attempts = doc.attempts,
+                maxAttempts = doc.maxAttempts,
+                isSend = doc.isSend,
+                createdAt = doc.createdAt,
+                modifiedAt = doc.modifiedAt
+            });
+
+            return responseEmail;
+        }
+
+
+        public async Task<bool> UpdateEmailDB(EmailResponseModels email ,bool isSend)
+        {
+            var body = await _dBContext.email
+                .Where (doc => doc.isSend == false
+                && doc.ID == email.ID
+                && doc.userId == email.userId).SingleOrDefaultAsync();
+
+            body.isSend = isSend;
+            body.attempts = body.attempts + 1;
+            body.modifiedAt = DateTime.Now;
+            await _dBContext.SaveChangesAsync();
+            return true;
+
         }
 
         public async Task<TemplateResponseModels> GetTemplateDB()
         {
             int id = 1;
-            var body = _dBContext.templates.Where(i => i.ID == id);
-
-            var res = await body.Select(i => new TemplateResponseModels
-            {
-                ID = i.ID,
-                Name = i.Name,
-                HTML = i.HTML,
-            }).FirstOrDefaultAsync();
+            var res = await _dBContext.templates
+                    .Where(i => i.ID == id)
+                    .Select(i => new TemplateResponseModels
+                    {
+                        ID = i.ID,
+                        Name = i.Name,
+                        HTML = i.HTML,
+                    })
+                    .FirstOrDefaultAsync();
 
             return res;
         }
 
         public async Task<UserResponseModels> GetUserDB(int id)
         {
-            var body = _dBContext.users.Where(i => i.ID == id);
-
-            var res = await body.Select(i => new UserResponseModels
-            {
-                ID = i.ID,
-                Name = i.Name,
-                PolicyNumber = i.PolicyNumber,
-                Age = i.Age,
-                Salary = i.Salary,
-                Occupation = i.Occupation,
-                PolicyExpiryDate = i.PolicyExpiryDate,
-                ProductCode = i.ProductCode,   
-                EmailAddress = i.EmailAddress
-
-            }).FirstOrDefaultAsync();
+            var res = await _dBContext.users
+                    .Where(i => i.ID == id)
+                    .Select(i => new UserResponseModels
+                    {
+                        ID = i.ID,
+                        Name = i.Name,
+                        PolicyNumber = i.PolicyNumber,
+                        Age = i.Age,
+                        Salary = i.Salary,
+                        Occupation = i.Occupation,
+                        PolicyExpiryDate = i.PolicyExpiryDate,
+                        ProductCode = i.ProductCode,
+                        EmailAddress = i.EmailAddress
+                    })
+                    .FirstOrDefaultAsync();
 
             return res;
         }
@@ -91,10 +111,6 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
                     body.IsDeleted = true;
                     await _dBContext.SaveChangesAsync();
                 }
-
-
-
-
                 PolicyDocument request = new PolicyDocument
                 {
                     ObjectCode = $"{user.PolicyNumber}-{user.ProductCode}",
@@ -118,6 +134,37 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
             {
                 return ex.Message;
             }
+        }
+
+        public async Task<string> InsertIntoEmailDB(UserResponseModels user, byte[] pdf)
+        {
+            try
+            {
+                Email email = new Email
+                { 
+                    userId = user.ID,
+                    name = user.Name,
+                    email = user.EmailAddress,
+                    subject = "Policy",
+                    body = "Dear  " + user.Name + ",\n\nThis is the user policy.\n\nBest regards,\nxyz".ToString(),
+                    attachment = pdf,
+                    maxAttempts = 3,
+                    createdAt = DateTime.Now,
+                };
+                _dBContext.email.Add(email);
+                await _dBContext.SaveChangesAsync();
+
+                return "true";
+            }
+            catch (Exception ex) 
+            {
+                return ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+            }
+        }
+
+        public async Task<bool> IsUserExitsDB(UserResponseModels user)
+        {
+            return await _dBContext.email.AnyAsync(e => e.userId == user.ID);
         }
     }
 }
