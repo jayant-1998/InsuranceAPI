@@ -4,16 +4,15 @@ using InsuranceAPI.Services.Interfaces;
 using MimeKit;
 using PuppeteerSharp;
 using PuppeteerSharp.Media;
-using MailKit.Net.Smtp;
 using System.Reflection;
-using System.Net.Mail;
 using MailKit.Security;
-using System.ComponentModel.DataAnnotations;
 
 namespace InsuranceAPI.Services.Implementations
 {
     public class InsuranceServices : IInsuranceServices
     {
+        private const string UserName = "jg986511@gmail.com";
+        private const string Password = "hwzgnejrbmlwoupa";
         private readonly IInsuranceRepositories _repositories;
 
         public InsuranceServices(IServiceProvider serviceProvider)
@@ -33,9 +32,8 @@ namespace InsuranceAPI.Services.Implementations
                 htmlTemplate = htmlTemplate.Replace(placeholder, valueString);
             }
 
-            return htmlTemplate; 
+            return htmlTemplate;
         }
-        
 
         public async Task<byte[]> HtmlToPdf(string html)
         {
@@ -69,26 +67,22 @@ namespace InsuranceAPI.Services.Implementations
                     message.From.Add(new MailboxAddress("jayant", "jg986511@gmail.com"));
                     message.To.Add(new MailboxAddress(Email.name, MailboxAddress.Parse(Email.email).ToString()));
                     message.Subject = Email.subject;
-
                     string textBody = Email.body;
-
                     BodyBuilder bodyBuilder = new BodyBuilder
                     {
                         TextBody = textBody
                     };
                     bodyBuilder.Attachments.Add("Policy.pdf", Email.attachment, new ContentType("application", "pdf"));
-
                     message.Body = bodyBuilder.ToMessageBody();
-
                     using (var smtpClient = new MailKit.Net.Smtp.SmtpClient())
                     {
                         smtpClient.ServerCertificateValidationCallback = (s, c, h, e) => true;
                         await smtpClient.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
-                        await smtpClient.AuthenticateAsync("jg986511@gmail.com", "hwzgnejrbmlwoupa");
+                        await smtpClient.AuthenticateAsync(UserName, Password);
                         try
                         {
-                            var str = await smtpClient.SendAsync(message);
-                            await Console.Out.WriteLineAsync(str);
+                            var str = smtpClient.Send(message);//not throw exception when email is not valid
+                            //await Console.Out.WriteLineAsync(str);
                             await smtpClient.DisconnectAsync(true);
                             var check = await _repositories.UpdateEmailDB(Email, true);
                             if (check != true)
@@ -98,7 +92,8 @@ namespace InsuranceAPI.Services.Implementations
                         }
                         catch (Exception ex)
                         {
-                            var check = await _repositories.UpdateEmailDB(Email, false);
+                            await smtpClient.DisconnectAsync(true);
+                            bool check = await _repositories.UpdateEmailDB(Email, false);
                             if (check != true)
                             {
                                 await Console.Out.WriteLineAsync(ex.Message);
@@ -106,19 +101,17 @@ namespace InsuranceAPI.Services.Implementations
                             }
                             await Console.Out.WriteLineAsync(ex.Message);
                             await Console.Out.WriteLineAsync(Email.ID + " was updated in the database");
-                            throw; 
+                            throw;
                         }
                     }
                 }
                 return true;
             }
-
             await Console.Out.WriteLineAsync("No Emails found");
             return true;
         }
 
-
-        public async Task<string> FinalApi(int id)
+        public async Task<string> populateDataAndCreatePdfSaveInDb(int id)
         {
             var template = await _repositories.GetTemplateDB();
             var userbody = await _repositories.GetUserDB(id).ConfigureAwait(false);
@@ -127,8 +120,8 @@ namespace InsuranceAPI.Services.Implementations
 
             var pdf = await HtmlToPdf(html);
 
-            var  doc = await _repositories.InsertIntoDocumentDB(userbody, pdf);
-            if (doc == "true") 
+            var doc = await _repositories.InsertIntoDocumentDB(userbody, pdf);
+            if (doc == "true")
             {
                 var exits = await _repositories.IsUserExitsDB(userbody);
                 if (exits == false)
@@ -140,11 +133,9 @@ namespace InsuranceAPI.Services.Implementations
                     }
                     return email;
                 }
-                return "true but already exits in the table email";
+                return "already exits in the table email";
             }
             return doc;
-
         }
-
     }
 }

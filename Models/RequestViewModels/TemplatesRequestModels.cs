@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
+﻿
 namespace InsuranceAPI.Models.RequestViewModels
 {
     public class TemplatesRequestModels

@@ -2,9 +2,7 @@
 using InsuranceAPI.DAL.Entities;
 using InsuranceAPI.DAL.Repositories.Interfaces;
 using InsuranceAPI.Models.ResponseViewModels;
-using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
 
 namespace InsuranceAPI.DAL.Repositories.Implementations
 {

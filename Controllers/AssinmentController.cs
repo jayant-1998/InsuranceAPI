@@ -2,7 +2,6 @@ using Hangfire;
 using InsuranceAPI.Models.ResponseViewModels;
 using InsuranceAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Razor.TagHelpers;
 
 namespace InsuranceAPI.Controllers
 {
@@ -22,8 +21,7 @@ namespace InsuranceAPI.Controllers
         {
             try
             {
-                await _service.SendEmail();
-                var result = await _service.FinalApi(id);
+                var result = await _service.populateDataAndCreatePdfSaveInDb(id);
                 var response = new ApiResponseModel
                 {
                     Timestamp = DateTime.Now,
@@ -46,26 +44,24 @@ namespace InsuranceAPI.Controllers
             }
         }
 
-        //[HttpGet("sendemails")]
-        //[Obsolete]
-        //public string SendEmail()
-        //{
-        //    try
-        //    {
-        //        RecurringJob.AddOrUpdate(() => _service.SendEmail(), "*/2 * * * *");
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Console.WriteLine(ex);
-        //    }
-
-        //    return "sending all emails";
-        //}
-
-
-
-
-
+        [HttpGet("sendemails")]
+        [Obsolete]
+        public string SendEmail()
+        {
+            try
+            {
+                _service.SendEmail();
+                var jobId = BackgroundJob.Enqueue(() => _service.SendEmail());
+                //RecurringJob.AddOrUpdate(() => _service.SendEmail(), "*/2 * * * *");
+                //IRecurringJobManager.Equals(() => _service.SendEmail(), "*/2 * * * *");
+                //var JobId = BackgroundJob.Schedule(() => _service.SendEmail(), TimeSpan.FromMinutes(10));
+                RecurringJob.AddOrUpdate("Sending mails",() => _service.SendEmail(),Cron.Hourly);
+                return "sending all emails";
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
     }
 }

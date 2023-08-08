@@ -1,4 +1,4 @@
-
+using Hangfire;
 using InsuranceAPI.DAL.DBContexts;
 using InsuranceAPI.DAL.Repositories.Implementations;
 using InsuranceAPI.DAL.Repositories.Interfaces;
@@ -16,8 +16,8 @@ builder.Services.AddControllers();
 
 
 //Hangfire
-//builder.Services.AddHangfire(x => x.UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")));
-//builder.Services.AddHangfireServer();
+builder.Services.AddHangfire(x => x.UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")));
+builder.Services.AddHangfireServer();
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -39,7 +39,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-//app.UseHangfireDashboard();
+app.UseHangfireDashboard();
 
 app.UseAuthorization();
 
