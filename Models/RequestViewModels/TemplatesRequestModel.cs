@@ -1,7 +1,7 @@
 ﻿
 namespace InsuranceAPI.Models.RequestViewModels
 {
-    public class TemplatesRequestModels
+    public class TemplatesRequestModel
     {
         
         //public int ID { get; set; }

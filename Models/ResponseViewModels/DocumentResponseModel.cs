@@ -2,7 +2,7 @@
 
 namespace InsuranceAPI.Models.ResponseViewModels
 {
-    public class DocumentResponseModels
+    public class DocumentResponseModel
     {
    
         public int ID { get; set; }

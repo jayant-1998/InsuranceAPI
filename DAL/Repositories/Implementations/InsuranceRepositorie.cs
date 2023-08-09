@@ -6,16 +6,16 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InsuranceAPI.DAL.Repositories.Implementations
 {
-    public class InsuranceRepositories : IInsuranceRepositories
+    public class InsuranceRepositorie : IInsuranceRepositorie
     {
         private readonly ApplicationDBContexts _dBContext;
 
-        public InsuranceRepositories(IServiceProvider serviceProvider)
+        public InsuranceRepositorie(IServiceProvider serviceProvider)
         {
             _dBContext = serviceProvider.GetRequiredService<ApplicationDBContexts>();
         }
 
-        public async Task<IEnumerable<EmailResponseModels>> GetEmailDb()
+        public async Task<IEnumerable<EmailResponseModel>> GetAllEmailDBAsync()
         {
             var body = await _dBContext.email
                         .Where(doc => doc.isSend == false
@@ -25,7 +25,7 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
             {
                 return null;
             }
-            var responseEmail = body.Select(doc => new EmailResponseModels
+            var responseEmail = body.Select(doc => new EmailResponseModel
             {
                 ID = doc.ID,
                 userId = doc.userId,
@@ -45,7 +45,7 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
         }
 
 
-        public async Task<bool> UpdateEmailDB(EmailResponseModels email ,bool isSend)
+        public async Task<bool> UpdateEmailDBAsync(EmailResponseModel email ,bool isSend)
         {
             var body = await _dBContext.email
                 .Where (doc => doc.isSend == false
@@ -60,12 +60,12 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
 
         }
 
-        public async Task<TemplateResponseModels> GetTemplateDB()
+        public async Task<TemplateResponseModel> GetTemplateDBAsync()
         {
             int id = 1;
             var res = await _dBContext.templates
                     .Where(i => i.ID == id)
-                    .Select(i => new TemplateResponseModels
+                    .Select(i => new TemplateResponseModel
                     {
                         ID = i.ID,
                         Name = i.Name,
@@ -76,11 +76,11 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
             return res;
         }
 
-        public async Task<UserResponseModels> GetUserDB(int id)
+        public async Task<UserResponseModel> GetUserDBAsync(int id)
         {
             var res = await _dBContext.users
                     .Where(i => i.ID == id)
-                    .Select(i => new UserResponseModels
+                    .Select(i => new UserResponseModel
                     {
                         ID = i.ID,
                         Name = i.Name,
@@ -96,7 +96,7 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
 
             return res;
         }
-        public async Task<string> InsertIntoDocumentDB(UserResponseModels user, byte[] pdf)
+        public async Task<string> InsertIntoDocumentDBAsync(UserResponseModel user, byte[] pdf)
         {
             try 
             {
@@ -134,7 +134,7 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
             }
         }
 
-        public async Task<string> InsertIntoEmailDB(UserResponseModels user, byte[] pdf)
+        public async Task<string> InsertIntoEmailDBAsync(UserResponseModel user, byte[] pdf)
         {
             try
             {
@@ -160,7 +160,7 @@ namespace InsuranceAPI.DAL.Repositories.Implementations
             }
         }
 
-        public async Task<bool> IsUserExitsDB(UserResponseModels user)
+        public async Task<bool> IsEmailExitsDBAsync(UserResponseModel user)
         {
             return await _dBContext.email.AnyAsync(e => e.userId == user.ID);
         }

@@ -1,41 +1,27 @@
 ﻿using InsuranceAPI.DAL.Repositories.Interfaces;
-using InsuranceAPI.Models.ResponseViewModels;
 using InsuranceAPI.Services.Interfaces;
 using MimeKit;
 using PuppeteerSharp;
 using PuppeteerSharp.Media;
-using System.Reflection;
 using MailKit.Security;
+using System.Text.RegularExpressions;
+using InsuranceAPI.Extensions;
 
 namespace InsuranceAPI.Services.Implementations
 {
-    public class InsuranceServices : IInsuranceServices
+    public class InsuranceService : IInsuranceService
     {
         private const string UserName = "jg986511@gmail.com";
         private const string Password = "hwzgnejrbmlwoupa";
-        private readonly IInsuranceRepositories _repositories;
+        private const string Pattern = "^([0-9a-zA-Z]([-\\.\\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\\w]*[0-9a-zA-Z]\\.)+[a-zA-Z]{2,9})$";
+        private readonly IInsuranceRepositorie _repositories;
 
-        public InsuranceServices(IServiceProvider serviceProvider)
+        public InsuranceService(IServiceProvider serviceProvider)
         {
-            _repositories = serviceProvider.GetRequiredService<IInsuranceRepositories>();
-        }
-        public string PopulateHtmlTemplateWithUserData(string htmlTemplate, UserResponseModels user)
-        {
-            PropertyInfo[] properties = typeof(UserResponseModels).GetProperties();
-
-            foreach (var property in properties)
-            {
-                string placeholder = $"{{{{{property.Name}}}}}";
-                object value = property.GetValue(user);
-                string valueString = value != null ? value.ToString() : string.Empty;
-
-                htmlTemplate = htmlTemplate.Replace(placeholder, valueString);
-            }
-
-            return htmlTemplate;
+            _repositories = serviceProvider.GetRequiredService<IInsuranceRepositorie>();
         }
 
-        public async Task<byte[]> HtmlToPdf(string html)
+        public async Task<byte[]> HtmlToPdfAsync(string html,int id)
         {
             await new BrowserFetcher().DownloadAsync();
             await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
@@ -50,15 +36,15 @@ namespace InsuranceAPI.Services.Implementations
                 Format = PaperFormat.A4,
                 PrintBackground = true
             });
-
-            File.WriteAllBytes("pdf/Converted.pdf", pdfContent);
+           
+            File.WriteAllBytes("pdf/Created.pdf", pdfContent);
 
             return pdfContent;
         }
 
-        public async Task<bool> SendEmail()
+        public async Task<bool> SendAllEmailAsync()
         {
-            var emails = await _repositories.GetEmailDb().ConfigureAwait(false);
+            var emails = await _repositories.GetAllEmailDBAsync().ConfigureAwait(false);
             if (emails.Count() >= 1)
             {
                 foreach (var Email in emails)
@@ -81,10 +67,10 @@ namespace InsuranceAPI.Services.Implementations
                         await smtpClient.AuthenticateAsync(UserName, Password);
                         try
                         {
-                            var str = smtpClient.Send(message);//not throw exception when email is not valid
+                            await smtpClient.SendAsync(message);//not throw exception when email is not valid
                             //await Console.Out.WriteLineAsync(str);
                             await smtpClient.DisconnectAsync(true);
-                            var check = await _repositories.UpdateEmailDB(Email, true);
+                            var check = await _repositories.UpdateEmailDBAsync(Email, true);
                             if (check != true)
                             {
                                 await Console.Out.WriteLineAsync(Email.ID + " was not updated in the database");
@@ -93,7 +79,7 @@ namespace InsuranceAPI.Services.Implementations
                         catch (Exception ex)
                         {
                             await smtpClient.DisconnectAsync(true);
-                            bool check = await _repositories.UpdateEmailDB(Email, false);
+                            bool check = await _repositories.UpdateEmailDBAsync(Email, false);
                             if (check != true)
                             {
                                 await Console.Out.WriteLineAsync(ex.Message);
@@ -111,29 +97,38 @@ namespace InsuranceAPI.Services.Implementations
             return true;
         }
 
-        public async Task<string> populateDataAndCreatePdfSaveInDb(int id)
+        public async Task<string> populateDataAndCreatePdfSaveInDbAsync(int id)
         {
-            var template = await _repositories.GetTemplateDB();
-            var userbody = await _repositories.GetUserDB(id).ConfigureAwait(false);
+            var htmlTemplate = await _repositories.GetTemplateDBAsync();
+            var userbody = await _repositories.GetUserDBAsync(id).ConfigureAwait(false);
 
-            var html = PopulateHtmlTemplateWithUserData(template.HTML, userbody);
+            //Populate data in the template 
+            string html = htmlTemplate.HTML.PopulateHtmlTemplateWithUserData(userbody);
 
-            var pdf = await HtmlToPdf(html);
+            //convert html to pdf 
+            var pdf = await HtmlToPdfAsync(html,id);
 
-            var doc = await _repositories.InsertIntoDocumentDB(userbody, pdf);
+            //make a new row in Policy Documents and delete previous one
+            var doc = await _repositories.InsertIntoDocumentDBAsync(userbody, pdf);
+
+            // regex to check email is valid or not
+            if (!Regex.Match(userbody.EmailAddress,Pattern).Success)
+            {
+                return id + " this id email is not valid";  
+            }
             if (doc == "true")
             {
-                var exits = await _repositories.IsUserExitsDB(userbody);
+                var exits = await _repositories.IsEmailExitsDBAsync(userbody);
                 if (exits == false)
                 {
-                    var email = await _repositories.InsertIntoEmailDB(userbody, pdf);
+                    var email = await _repositories.InsertIntoEmailDBAsync(userbody, pdf);
                     if (email == "true")
                     {
                         return email;
                     }
                     return email;
                 }
-                return "already exits in the table email";
+                return "already exits in emails table";
             }
             return doc;
         }

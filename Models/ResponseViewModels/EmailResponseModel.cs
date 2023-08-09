@@ -1,9 +1,6 @@
-﻿using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-
-namespace InsuranceAPI.Models.ResponseViewModels
+﻿namespace InsuranceAPI.Models.ResponseViewModels
 {
-    public class EmailResponseModels
+    public class EmailResponseModel
     {
         public int ID { get; set; }
         public int userId { get; set; }

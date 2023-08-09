@@ -1,7 +1,7 @@
 ﻿
 namespace InsuranceAPI.Models.ResponseViewModels
 {
-    public class UserResponseModels
+    public class UserResponseModel
     {
         public int ID { get; set; }
         public string Name { get; set; }

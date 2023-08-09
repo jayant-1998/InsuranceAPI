@@ -22,8 +22,8 @@ builder.Services.AddHangfireServer();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddScoped<IInsuranceRepositories, InsuranceRepositories>();
-builder.Services.AddTransient<IInsuranceServices, InsuranceServices>();
+builder.Services.AddScoped<IInsuranceRepositorie, InsuranceRepositorie>();
+builder.Services.AddTransient<IInsuranceService, InsuranceService>();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<ApplicationDBContexts>(options => options.UseSqlServer("name=DefaultConnection"));

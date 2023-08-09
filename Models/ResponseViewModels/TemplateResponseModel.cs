@@ -1,8 +1,6 @@
-﻿
-
-namespace InsuranceAPI.Models.ResponseViewModels
+﻿namespace InsuranceAPI.Models.ResponseViewModels
 {
-    public class TemplateResponseModels
+    public class TemplateResponseModel
     {
         
         public int ID { get; set; }
