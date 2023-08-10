@@ -4,7 +4,7 @@ namespace InsuranceAPI.Extensions
 {
     public static class Extensitionmethod
     {
-        public static string PopulateHtmlTemplateWithUserData<T2>(this string htmlTemplate, T2 user)
+        public static string ToViewModel<T2>(this string htmlTemplate, T2 user)
         {
             PropertyInfo[] properties = user.GetType().GetProperties();
             foreach ( var property in properties )

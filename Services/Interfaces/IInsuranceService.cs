@@ -2,8 +2,8 @@
 {
     public interface IInsuranceService
     {
-        public Task<string> populateDataAndCreatePdfSaveInDbAsync(int id);
+        public Task<string> PopulateDataAndCreatePdfAsync(int id);
         public Task<byte[]> HtmlToPdfAsync(string html,int id);
-        public Task<bool> SendAllEmailAsync();
+        public Task<bool> GetEmailsAsync();
     }
 }

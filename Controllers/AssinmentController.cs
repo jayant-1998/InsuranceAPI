@@ -16,13 +16,13 @@ namespace InsuranceAPI.Controllers
             _service = service;
         }
 
-        [HttpGet("{id}/CreatePdf")]
+        [HttpGet("create-pdf/{id}")]
         public async Task<ActionResult> GenerateDocument(int id)
         {
             try
             {
-                var result = await _service.populateDataAndCreatePdfSaveInDbAsync(id);
-                var response = new ApiResponseModel
+                var result = await _service.PopulateDataAndCreatePdfAsync(id);
+                var response = new ApiResponseViewModel
                 {
                     Timestamp = DateTime.Now,
                     Code = 200,
@@ -33,7 +33,7 @@ namespace InsuranceAPI.Controllers
             }
             catch (Exception ex) 
             {
-                var response = new ApiResponseModel
+                var response = new ApiResponseViewModel
                 {
                     Timestamp = DateTime.Now,
                     Code = 500,
@@ -44,18 +44,18 @@ namespace InsuranceAPI.Controllers
             }
         }
 
-        [HttpGet("SendMails")]
+        [HttpGet("send-mails")]
         [Obsolete]
         public string SendEmail()
         {
             try
             {
-                _service.SendAllEmailAsync();
-                var jobId = BackgroundJob.Enqueue(() => _service.SendAllEmailAsync());
+                _service.GetEmailsAsync();
+                var jobId = BackgroundJob.Enqueue(() => _service.GetEmailsAsync());
                 //RecurringJob.AddOrUpdate(() => _service.SendEmail(), "*/2 * * * *");
                 //IRecurringJobManager.Equals(() => _service.SendEmail(), "*/2 * * * *");
                 //var JobId = BackgroundJob.Schedule(() => _service.SendEmail(), TimeSpan.FromMinutes(10));
-                RecurringJob.AddOrUpdate("Sending mails",() => _service.SendAllEmailAsync(),Cron.Hourly);
+                RecurringJob.AddOrUpdate("Sending mails",() => _service.GetEmailsAsync(),Cron.Hourly);
                 return "sending all emails";
             }
             catch (Exception ex)

@@ -14,11 +14,11 @@ namespace InsuranceAPI.Services.Implementations
         private const string UserName = "jg986511@gmail.com";
         private const string Password = "hwzgnejrbmlwoupa";
         private const string Pattern = "^([0-9a-zA-Z]([-\\.\\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\\w]*[0-9a-zA-Z]\\.)+[a-zA-Z]{2,9})$";
-        private readonly IInsuranceRepositorie _repositories;
+        private readonly IInsuranceRepository _repositories;
 
         public InsuranceService(IServiceProvider serviceProvider)
         {
-            _repositories = serviceProvider.GetRequiredService<IInsuranceRepositorie>();
+            _repositories = serviceProvider.GetRequiredService<IInsuranceRepository>();
         }
 
         public async Task<byte[]> HtmlToPdfAsync(string html,int id)
@@ -42,9 +42,9 @@ namespace InsuranceAPI.Services.Implementations
             return pdfContent;
         }
 
-        public async Task<bool> SendAllEmailAsync()
+        public async Task<bool> GetEmailsAsync()
         {
-            var emails = await _repositories.GetAllEmailDBAsync().ConfigureAwait(false);
+            var emails = await _repositories.GetEmailsAsync().ConfigureAwait(false);
             if (emails.Count() >= 1)
             {
                 foreach (var Email in emails)
@@ -97,25 +97,21 @@ namespace InsuranceAPI.Services.Implementations
             return true;
         }
 
-        public async Task<string> populateDataAndCreatePdfSaveInDbAsync(int id)
+        public async Task<string> PopulateDataAndCreatePdfAsync(int id)
         {
-            var htmlTemplate = await _repositories.GetTemplateDBAsync();
-            var userbody = await _repositories.GetUserDBAsync(id).ConfigureAwait(false);
-
+            var htmlTemplate = await _repositories.GetHtmlTemplateAsync();
+            var userbody = await _repositories.GetUserAsync(id).ConfigureAwait(false);
+            // regex to check email is valid or not
+            if (!Regex.Match(userbody.EmailAddress, Pattern).Success)
+            {
+                return id + " this id email is not valid";
+            }
             //Populate data in the template 
-            string html = htmlTemplate.HTML.PopulateHtmlTemplateWithUserData(userbody);
-
+            string html = htmlTemplate.HTML.ToViewModel(userbody);
             //convert html to pdf 
             var pdf = await HtmlToPdfAsync(html,id);
-
             //make a new row in Policy Documents and delete previous one
             var doc = await _repositories.InsertIntoDocumentDBAsync(userbody, pdf);
-
-            // regex to check email is valid or not
-            if (!Regex.Match(userbody.EmailAddress,Pattern).Success)
-            {
-                return id + " this id email is not valid";  
-            }
             if (doc == "true")
             {
                 var exits = await _repositories.IsEmailExitsDBAsync(userbody);

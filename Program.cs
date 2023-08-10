@@ -22,7 +22,7 @@ builder.Services.AddHangfireServer();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddScoped<IInsuranceRepositorie, InsuranceRepositorie>();
+builder.Services.AddScoped<IInsuranceRepository, InsuranceRepository>();
 builder.Services.AddTransient<IInsuranceService, InsuranceService>();
 builder.Services.AddSwaggerGen();
 
