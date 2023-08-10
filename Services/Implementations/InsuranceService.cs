@@ -42,7 +42,7 @@ namespace InsuranceAPI.Services.Implementations
             return pdfContent;
         }
 
-        public async Task<bool> GetEmailsAsync()
+        public async Task<bool> SendEmailsAsync()
         {
             var emails = await _repositories.GetEmailsAsync().ConfigureAwait(false);
             if (emails.Count() >= 1)
@@ -70,7 +70,7 @@ namespace InsuranceAPI.Services.Implementations
                             await smtpClient.SendAsync(message);//not throw exception when email is not valid
                             //await Console.Out.WriteLineAsync(str);
                             await smtpClient.DisconnectAsync(true);
-                            var check = await _repositories.UpdateEmailDBAsync(Email, true);
+                            var check = await _repositories.UpdateEmailAsync(Email, true);
                             if (check != true)
                             {
                                 await Console.Out.WriteLineAsync(Email.ID + " was not updated in the database");
@@ -79,7 +79,7 @@ namespace InsuranceAPI.Services.Implementations
                         catch (Exception ex)
                         {
                             await smtpClient.DisconnectAsync(true);
-                            bool check = await _repositories.UpdateEmailDBAsync(Email, false);
+                            bool check = await _repositories.UpdateEmailAsync(Email, false);
                             if (check != true)
                             {
                                 await Console.Out.WriteLineAsync(ex.Message);
@@ -97,27 +97,27 @@ namespace InsuranceAPI.Services.Implementations
             return true;
         }
 
-        public async Task<string> PopulateDataAndCreatePdfAsync(int id)
+        public async Task<string> CreatePdfAsync(int id)
         {
             var htmlTemplate = await _repositories.GetHtmlTemplateAsync();
-            var userbody = await _repositories.GetUserAsync(id).ConfigureAwait(false);
+            var userDetails = await _repositories.GetUserAsync(id).ConfigureAwait(false);
             // regex to check email is valid or not
-            if (!Regex.Match(userbody.EmailAddress, Pattern).Success)
+            if (!Regex.Match(userDetails.email, Pattern).Success)
             {
                 return id + " this id email is not valid";
             }
             //Populate data in the template 
-            string html = htmlTemplate.HTML.ToViewModel(userbody);
+            string html = htmlTemplate.HTML.PopulateDataInHtmlTemplate(userDetails);
             //convert html to pdf 
             var pdf = await HtmlToPdfAsync(html,id);
             //make a new row in Policy Documents and delete previous one
-            var doc = await _repositories.InsertIntoDocumentDBAsync(userbody, pdf);
-            if (doc == "true")
+            var document = await _repositories.InsertDocumentAsync(userDetails, pdf);
+            if (document == "true")
             {
-                var exits = await _repositories.IsEmailExitsDBAsync(userbody);
+                var exits = await _repositories.IsEmailExitsAsync(userDetails);
                 if (exits == false)
                 {
-                    var email = await _repositories.InsertIntoEmailDBAsync(userbody, pdf);
+                    var email = await _repositories.InsertEmailAsync(userDetails, pdf);
                     if (email == "true")
                     {
                         return email;
@@ -126,7 +126,7 @@ namespace InsuranceAPI.Services.Implementations
                 }
                 return "already exits in emails table";
             }
-            return doc;
+            return document;
         }
     }
 }

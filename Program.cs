@@ -1,5 +1,5 @@
 using Hangfire;
-using InsuranceAPI.DAL.DBContexts;
+using InsuranceAPI.DAL.DBContext;
 using InsuranceAPI.DAL.Repositories.Implementations;
 using InsuranceAPI.DAL.Repositories.Interfaces;
 using InsuranceAPI.Services.Implementations;
@@ -16,7 +16,7 @@ builder.Services.AddControllers();
 
 
 //Hangfire
-builder.Services.AddHangfire(x => x.UseSqlServerStorage(builder.Configuration.GetConnectionString("HangfireConnection")));
+builder.Services.AddHangfire(x => x.UseSqlServerStorage(builder.Configuration.GetConnectionString("HangFireConnection")));
 builder.Services.AddHangfireServer();
 
 
@@ -26,7 +26,7 @@ builder.Services.AddScoped<IInsuranceRepository, InsuranceRepository>();
 builder.Services.AddTransient<IInsuranceService, InsuranceService>();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddDbContext<ApplicationDBContexts>(options => options.UseSqlServer("name=DefaultConnection"));
+builder.Services.AddDbContext<ApplicationDBContext>(options => options.UseSqlServer("name=DefaultConnection"));
 
 var app = builder.Build();
 

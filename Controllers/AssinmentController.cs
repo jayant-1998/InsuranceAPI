@@ -7,21 +7,21 @@ namespace InsuranceAPI.Controllers
 {
     [ApiController]
     [Route("insurance")]
-    public class AssinmentController : ControllerBase
+    public class AssignmentController : ControllerBase
     {
         private readonly IInsuranceService _service;
 
-        public AssinmentController(IInsuranceService service)
+        public AssignmentController(IInsuranceService service)
         {
             _service = service;
         }
 
         [HttpGet("create-pdf/{id}")]
-        public async Task<ActionResult> GenerateDocument(int id)
+        public async Task<ActionResult> CreatePdf(int id)
         {
             try
             {
-                var result = await _service.PopulateDataAndCreatePdfAsync(id);
+                var result = await _service.CreatePdfAsync(id);
                 var response = new ApiResponseViewModel
                 {
                     Timestamp = DateTime.Now,
@@ -46,16 +46,15 @@ namespace InsuranceAPI.Controllers
 
         [HttpGet("send-mails")]
         [Obsolete]
-        public string SendEmail()
+        public string SendEmails()
         {
             try
             {
-                _service.GetEmailsAsync();
-                var jobId = BackgroundJob.Enqueue(() => _service.GetEmailsAsync());
+                var jobId = BackgroundJob.Enqueue(() => _service.SendEmailsAsync());
                 //RecurringJob.AddOrUpdate(() => _service.SendEmail(), "*/2 * * * *");
                 //IRecurringJobManager.Equals(() => _service.SendEmail(), "*/2 * * * *");
                 //var JobId = BackgroundJob.Schedule(() => _service.SendEmail(), TimeSpan.FromMinutes(10));
-                RecurringJob.AddOrUpdate("Sending mails",() => _service.GetEmailsAsync(),Cron.Hourly);
+                RecurringJob.AddOrUpdate("Sending mails",() => _service.SendEmailsAsync(),Cron.Hourly);
                 return "sending all emails";
             }
             catch (Exception ex)
