@@ -16,9 +16,9 @@ namespace InsuranceAPI.Services.Implementations
         private const string Pattern = "^([0-9a-zA-Z]([-\\.\\w]*[0-9a-zA-Z])*@([0-9a-zA-Z][-\\w]*[0-9a-zA-Z]\\.)+[a-zA-Z]{2,9})$";
         private readonly IInsuranceRepository _repositories;
 
-        public InsuranceService(IServiceProvider serviceProvider)
+        public InsuranceService(IServiceProvider service)
         {
-            _repositories = serviceProvider.GetRequiredService<IInsuranceRepository>();
+            _repositories = service.GetRequiredService<IInsuranceRepository>();
         }
 
         public async Task<byte[]> HtmlToPdfAsync(string html,int id)
@@ -68,7 +68,6 @@ namespace InsuranceAPI.Services.Implementations
                         try
                         {
                             await smtpClient.SendAsync(message);//not throw exception when email is not valid
-                            //await Console.Out.WriteLineAsync(str);
                             await smtpClient.DisconnectAsync(true);
                             var check = await _repositories.UpdateEmailAsync(Email, true);
                             if (check != true)
@@ -101,16 +100,12 @@ namespace InsuranceAPI.Services.Implementations
         {
             var htmlTemplate = await _repositories.GetHtmlTemplateAsync();
             var userDetails = await _repositories.GetUserAsync(id).ConfigureAwait(false);
-            // regex to check email is valid or not
             if (!Regex.Match(userDetails.email, Pattern).Success)
             {
-                return id + " this id email is not valid";
+                return "This id email is not valid";
             }
-            //Populate data in the template 
             string html = htmlTemplate.HTML.PopulateDataInHtmlTemplate(userDetails);
-            //convert html to pdf 
             var pdf = await HtmlToPdfAsync(html,id);
-            //make a new row in Policy Documents and delete previous one
             var document = await _repositories.InsertDocumentAsync(userDetails, pdf);
             if (document == "true")
             {

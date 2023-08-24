@@ -6,14 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace InsuranceAPI.Controllers
 {
     [ApiController]
-    [Route("insurance")]
-    public class AssignmentController : ControllerBase
+    [Route("api/[Controller]")]
+    public class InsuranceController : ControllerBase
     {
         private readonly IInsuranceService _service;
 
-        public AssignmentController(IInsuranceService service)
+        public InsuranceController(IServiceProvider service)
         {
-            _service = service;
+            _service = service.GetService<IInsuranceService>();
         }
 
         [HttpGet("create-pdf/{id}")]
